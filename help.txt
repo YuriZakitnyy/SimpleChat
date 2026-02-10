@@ -1,0 +1,2 @@
+docker build -f ChatServer/Dockerfile -t chatserver:latest .
+docker tag chatserver:latest yurizakitny/chatserver:1.0.1

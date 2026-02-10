@@ -1,0 +1,59 @@
+﻿<Window x:Class="ChatClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chat Client" Height="450" Width="700">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Expander Header="Connection Settings" IsExpanded="True" Margin="0,0,0,8">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="5">
+                <Button DataContext="{Binding ConnectCommand}" Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Width="80" Margin="0,0,8,0" />
+                <Button DataContext="{Binding DisconnectCommand}" Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Width="80"/>
+                <Label Content="Hub URL:" VerticalAlignment="Center" Margin="16,0,4,0" />
+                <ComboBox ItemsSource="{Binding Addresses}" Text="{Binding BackendUrl, Mode=TwoWay}"
+                      Width="220" Margin="12,0,8,0" VerticalAlignment="Center" IsEditable="True" IsTextSearchEnabled="True"/>
+                <Label Content="User:" VerticalAlignment="Center" />
+                <TextBox Text="{Binding UserName,Mode=TwoWay}" Width="100" Margin="6,0,12,0" VerticalContentAlignment="Center" />
+            </StackPanel>
+        </Expander>
+        
+        <ListBox x:Name="MessagesListBox" Grid.Row="1" ItemsSource="{Binding Path=Messages}" Margin="0,0,0,8"
+                 ItemTemplate="{StaticResource ChatMessageDataTemplate}"
+                ItemContainerStyle="{StaticResource ChatItemContainerStyle}"
+                ScrollViewer.CanContentScroll="True"
+                VirtualizingStackPanel.IsVirtualizing="True"
+                VirtualizingStackPanel.VirtualizationMode="Recycling"
+                VirtualizingStackPanel.ScrollUnit="Pixel"/>
+
+        <Grid Grid.Row="2" Margin="0,0,0,8" Height="60">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding MessageText,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                 Margin="0,0,8,0"
+                 VerticalContentAlignment="Top"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 HorizontalScrollBarVisibility="Disabled"
+                 AllowDrop="True" 
+                 PreviewDragOver="FilePathTextBox_PreviewDragOver" 
+                 Drop="FilePathTextBox_Drop" >
+                <!-- KeyBinding for Ctrl+Enter. Bind via the UserControl's DataContext so the command resolves correctly. -->
+                <TextBox.CommandBindings>
+                    <CommandBinding Command="ApplicationCommands.Paste"
+                                    Executed="MessageTextBox_PasteExecuted"
+                                    CanExecute="MessageTextBox_PasteCanExecute"/>
+                </TextBox.CommandBindings>
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding SendCommand}"/>
+                </TextBox.InputBindings>
+            </TextBox>
+            <Button Grid.Column="1" DataContext="{Binding SendCommand}" Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Width="80" />
+        </Grid>
+    </Grid>
+</Window>

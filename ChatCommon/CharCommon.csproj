@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Multi-target so both .NET 9 server and .NET Framework 4.8 client can reference this library -->
+    <TargetFrameworks>net9.0;net48</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!-- Enable implicit usings only for the modern target -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

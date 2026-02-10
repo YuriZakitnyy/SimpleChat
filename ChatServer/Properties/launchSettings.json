@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "ChatServer.Core": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:31777;http://localhost:31777"
+    }
+  }
+}
