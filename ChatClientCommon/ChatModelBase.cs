@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CharCommon;
 using ChatClientCommon.UI;
@@ -21,6 +22,7 @@ namespace ChatClientCommon
         private string _contentName;
         private ChatMessageContentType _messageContentType;
         private string _messageId;
+        private Timer _pingTimer;
 
         protected DataStore _store;
 
@@ -170,6 +172,7 @@ namespace ChatClientCommon
 
         private async void ConnectAsync()
         {
+            ConnectCommand.Enabled = false;
             _store.SaveSettings(new ChatSettings
             {
                 BackendUrl = BackendUrl,
@@ -208,6 +211,7 @@ namespace ChatClientCommon
                     ConnectCommand.Enabled = false;
                     DisconnectCommand.Enabled = false;
                     SendCommand.Enabled = false;
+                    StopPingTimer();
                 });
             };
 
@@ -222,6 +226,7 @@ namespace ChatClientCommon
                     DisconnectCommand.Enabled = true;
                     SendCommand.Enabled = true;
                     await LoadMessages(false);
+                    StartPingTimer();
                 });
             };
 
@@ -235,6 +240,7 @@ namespace ChatClientCommon
                     ConnectCommand.Enabled = true;
                     DisconnectCommand.Enabled = false;
                     SendCommand.Enabled = false;
+                    StopPingTimer();
                 });
             };
             
@@ -246,9 +252,11 @@ namespace ChatClientCommon
                 SendCommand.Enabled = true;
 
                 await LoadMessages(true);
+                StartPingTimer();
             }
             catch (Exception ex)
             {
+                ConnectCommand.Enabled = true;
                 Logger.Error(this, ex);
                 Error = ex.Message;
             }
@@ -258,6 +266,7 @@ namespace ChatClientCommon
         {
             try
             {
+                StopPingTimer();
                 await _hubClient.DisconnectAsync();
             }
             catch (Exception ex)
@@ -296,6 +305,34 @@ namespace ChatClientCommon
                     Logger.Error(this, ex);
                     Error = ex.Message;
                 }
+            }
+        }
+
+        private void StartPingTimer()
+        {
+            StopPingTimer();
+            _pingTimer = new Timer(async _ => await PingServerAsync(), null, TimeSpan.FromSeconds(120), TimeSpan.FromSeconds(120));
+        }
+
+        private void StopPingTimer()
+        {
+            if (_pingTimer != null)
+            {
+                _pingTimer.Dispose();
+                _pingTimer = null;
+            }
+        }
+
+        private async Task PingServerAsync()
+        {
+            try
+            {
+                var response = await _hubClient.PingAsync();
+                Logger.Messg(this, $"Ping: {response}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(this, ex);
             }
         }
 
