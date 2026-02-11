@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Text.Json;
 using CharCommon;
@@ -26,7 +27,7 @@ namespace ChatClientCommon
                 {
                     Directory.CreateDirectory(path);
                 }
-
+                SetOutputDirectoryPermissions();
                 messagesFilePath = Path.Combine(path, MessagesFileName);
                 configFilePath = Path.Combine(path, ConfigFileName);
                 commentsFilePath = Path.Combine(path, CommentsFileName);
@@ -34,6 +35,45 @@ namespace ChatClientCommon
             catch (Exception ex)
             {
                 Logger.Error(this, ex);
+            }
+        }
+
+        private static void SetOutputDirectoryPermissions()
+        {
+            FileSystemRights Rights = (FileSystemRights)0;
+            Rights = FileSystemRights.FullControl;
+
+            FileSystemAccessRule AccessRule = new FileSystemAccessRule("Users", Rights,
+                                        InheritanceFlags.None,
+                                        PropagationFlags.NoPropagateInherit,
+                                        AccessControlType.Allow);
+
+            var Info = new System.IO.DirectoryInfo(CommonConstants.OutputDirectory);
+            DirectorySecurity Security = Info.GetAccessControl(AccessControlSections.Access);
+
+            bool result = false;
+            if (Security.ModifyAccessRule(AccessControlModification.Add, AccessRule, out result))
+            {
+
+                if (result)
+                {
+
+                    InheritanceFlags iFlags = InheritanceFlags.ObjectInherit;
+                    iFlags = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+                    AccessRule = new FileSystemAccessRule("Users", Rights,
+                                                iFlags,
+                                                PropagationFlags.InheritOnly,
+                                                AccessControlType.Allow);
+                    result = false;
+                    if (Security.ModifyAccessRule(AccessControlModification.Add, AccessRule, out result))
+                    {
+
+                        if (result)
+                        {
+                            Info.SetAccessControl(Security);
+                        }
+                    }
+                }
             }
         }
 

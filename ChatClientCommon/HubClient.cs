@@ -70,6 +70,11 @@ namespace ChatClientCommon
             return _connection.InvokeAsync<IEnumerable<ChatMessage>>("ListMessages", date, userName);
         }
 
+        public Task<string> PingAsync()
+        {
+            return _connection.InvokeAsync<string>("Ping");
+        }
+
         public async Task DisconnectAsync()
         {
             if (_connection is null) return;

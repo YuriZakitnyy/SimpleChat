@@ -24,6 +24,12 @@ namespace ChatServer.Core.Hubs
             await Clients.All.SendAsync("ReceiveMessage", message);
         }
 
+        public Task<string> Ping()
+        {
+            Console.WriteLine($"Ping received from connection: {Context.ConnectionId}");
+            return Task.FromResult("Pong");
+        }
+
         public override Task OnConnectedAsync()
         {
             return base.OnConnectedAsync();
