@@ -365,3 +365,7 @@ FodyWeavers.xsd
 ChatClientAndroid/app/build/intermediates
 ChatClientAndroid/app/build/generated
 ChatClientAndroid/app/build/tmp
+ChatClientAndroid/.idea/libraries
+
+*.iml
+.idea

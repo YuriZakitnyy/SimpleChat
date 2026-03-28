@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using CharCommon;
+using ChatCommon;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ChatClientCommon
@@ -67,6 +68,46 @@ namespace ChatClientCommon
         public Task<IEnumerable<ChatMessage>> ListMessagesAsync(DateTime date, string userName)
         {
             return _connection.InvokeAsync<IEnumerable<ChatMessage>>("ListMessages", date, userName);
+        }
+
+        public async Task<IEnumerable<ChatMessage>> ListMessagesChunksAsync(DateTime date, string userName)
+        {
+            var result = new List<ChatMessage>();
+            var chunk = await _connection.InvokeAsync<ChatMessagesChunk>("ListMessagesChunk", date, userName);
+            while (true)
+            {
+                if (chunk == null || chunk.Messages == null || chunk.Messages.Count() == 0)
+                {
+                    break;
+                }
+                result.AddRange(chunk.Messages);
+                if (string.IsNullOrEmpty(chunk.Next))
+                {
+                    break;
+                }
+                chunk = await _connection.InvokeAsync<ChatMessagesChunk>("ListMessagesNext", chunk.Next, userName);
+            }
+            return result;
+        }
+
+        public async Task<IEnumerable<ChatMessage>> ListMessagesChunksAsync(string last, string userName)
+        {
+            var result = new List<ChatMessage>();
+            var chunk = await _connection.InvokeAsync<ChatMessagesChunk>("ListMessagesNext", last, userName);
+            while (true)
+            {
+                if (chunk == null || chunk.Messages == null || chunk.Messages.Count() == 0)
+                {
+                    break;
+                }
+                result.AddRange(chunk.Messages);
+                if (string.IsNullOrEmpty(chunk.Next))
+                {
+                    break;
+                }
+                chunk = await _connection.InvokeAsync<ChatMessagesChunk>("ListMessagesNext", chunk.Next, userName);
+            }
+            return result;
         }
 
         public Task<string> PingAsync()

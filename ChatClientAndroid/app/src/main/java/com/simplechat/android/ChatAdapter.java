@@ -2,6 +2,9 @@ package com.simplechat.android;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -92,7 +95,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
                 case ChatMessage.ChatMessageContentType_Text:
                     messageText.setVisibility(View.VISIBLE);
                     messageImage.setVisibility(View.GONE);
-                    messageText.setText(message.getMessage());
+                    SpannableString spannable = new SpannableString(message.getMessage() != null ? message.getMessage() : "");
+                    Linkify.addLinks(spannable, Linkify.WEB_URLS);
+                    messageText.setText(spannable);
+                    if (spannable.getSpans(0, spannable.length(), Object.class).length > 0) {
+                        messageText.setMovementMethod(LinkMovementMethod.getInstance());
+                    } else {
+                        messageText.setMovementMethod(null);
+                    }
                     break;
                 case ChatMessage.ChatMessageContentType_Image:
                     messageText.setVisibility(View.GONE);

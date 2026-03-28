@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Media.Imaging;
-using CharCommon;
+using ChatCommon;
 
 namespace ChatClientCommon
 {

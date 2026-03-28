@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
-using CharCommon;
+using ChatCommon;
 using ChatClientCommon;
 using ChatClientCommon.UI;
 

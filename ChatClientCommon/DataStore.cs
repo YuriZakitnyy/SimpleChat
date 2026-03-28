@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Text.Json;
-using CharCommon;
+using ChatCommon;
 
 namespace ChatClientCommon
 {

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using CharCommon;
+using ChatCommon;
 
 namespace ChatClientCommon
 {

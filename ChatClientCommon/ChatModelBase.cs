@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using CharCommon;
+using ChatCommon;
 using ChatClientCommon.UI;
 
 namespace ChatClientCommon
@@ -352,7 +352,7 @@ namespace ChatClientCommon
                     AddMessages(stored);
                 }
                 var last = Messages.OrderBy(it => it.Time).LastOrDefault();
-                var newMesasges = await _hubClient.ListMessagesAsync(last == null ? DateTime.UtcNow.AddYears(-1) : last.Time, UserName);
+                var newMesasges = await _hubClient.ListMessagesChunksAsync(last != null ? last.Message.Id : null, UserName);
                 AddMessages(newMesasges, true);
                 Loaded();
             }

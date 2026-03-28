@@ -97,13 +97,45 @@ public class HubClient {
         return Single.just(false);
     }
 
-    public Single<List<ChatMessage>> listMessages(Date date, String userName) {
-        if (connection != null && connection.getConnectionState() == HubConnectionState.CONNECTED) {
-            Type type = new TypeToken<List<ChatMessage>>(){}.getType();
-            String dt = DateFormatter.format(date);
-            return connection.invoke(type, "ListMessagesAndroid", dt, userName);
+    public Single<List<ChatMessage>> listMessages(String last, String userName) {
+        if (connection == null || connection.getConnectionState() != HubConnectionState.CONNECTED) {
+            return Single.just(Collections.emptyList());
         }
-        return Single.just(Collections.emptyList());
+
+        // Fetch first chunk
+        return listMessagesChunkNext(last, userName)
+                .flatMap(firstChunk -> {
+                List<ChatMessage> allMessages = new java.util.ArrayList<>(firstChunk.getMessages());
+
+                // If there's a next token, recursively fetch remaining chunks
+                if (firstChunk.getNext() != null && !firstChunk.getNext().isEmpty()) {
+                    return fetchChunksRecursively(firstChunk.getNext(), userName, allMessages);
+                } else {
+                    return Single.just(allMessages);
+                }
+                });
+    }
+
+    private Single<List<ChatMessage>> fetchChunksRecursively(String nextToken, String userName, List<ChatMessage> accumulator) {
+        return listMessagesChunkNext(nextToken, userName)
+            .flatMap(chunk -> {
+                accumulator.addAll(chunk.getMessages());
+
+                // If there's another chunk, continue fetching
+                if (chunk.getNext() != null && !chunk.getNext().isEmpty()) {
+                    return fetchChunksRecursively(chunk.getNext(), userName, accumulator);
+                } else {
+                    return Single.just(accumulator);
+                }
+            });
+    }
+
+    public Single<ChatMessagesChunk> listMessagesChunkNext(String next, String userName) {
+        if (connection != null && connection.getConnectionState() == HubConnectionState.CONNECTED) {
+            Type type = new TypeToken<ChatMessagesChunk>(){}.getType();
+            return connection.invoke(type, "ListMessagesNext", next, userName);
+        }
+        return Single.just(new ChatMessagesChunk());
     }
 
     public Single<Boolean> register(String deviceId, String token)
