@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
-using CharCommon;
+using ChatCommon;
 using ChatClientCommon.UI;
 
 namespace ChatClientCommon

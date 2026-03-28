@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends Activity
@@ -128,13 +129,7 @@ public class MainActivity extends Activity
             chatAdapter.addMessage(message);
         }
         messagesRecyclerView.scrollToPosition(chatAdapter.getItemCount() - 1);
-        Date date;
-        if (last != null) {
-            date = DateFormatter.parse(last.getTimestamp());
-        } else {
-            date = new Date(System.currentTimeMillis() - 48L * 60 * 60 * 1000); // 1 day in the past
-        }
-        hubClient.listMessages(date, settingsManager.getUserName())
+        hubClient.listMessages(last != null ? last.getId() : null, settingsManager.getUserName())
                 .subscribe(messages -> runOnUiThread(() -> {
                     if (messages != null)
                     {

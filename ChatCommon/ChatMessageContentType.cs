@@ -1,10 +1,9 @@
-﻿namespace CharCommon
+﻿namespace ChatCommon;
+
+public enum ChatMessageContentType
 {
-    public enum ChatMessageContentType
-    {
-        Text,
-        Image,
-        File,
-        Emogi,
-    }
+    Text,
+    Image,
+    File,
+    Emogi,
 }

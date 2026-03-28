@@ -40,10 +40,11 @@ try
     });
     builder.Services.AddSingleton<FirebaseMessagingService>();
     builder.Services.AddSingleton<DeviceTokenStore>();
+    builder.Services.AddSingleton<MessageStore>();
 
     // Add background service for cleanup
     //builder.Services.AddHostedService<DeviceCleanupService>();
-
+    //builder.Services.AddHostedService<MessageCleanupService>();
     Console.WriteLine("Build");
     var app = builder.Build();
 

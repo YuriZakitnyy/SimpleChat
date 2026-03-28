@@ -1,5 +1,5 @@
 using System;
-namespace CharCommon;
+namespace ChatCommon;
 
 public class ChatMessage
 {

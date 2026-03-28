@@ -1,4 +1,4 @@
-﻿using CharCommon;
+﻿using ChatCommon;
 using ChatServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
@@ -6,35 +6,27 @@ namespace ChatServer.Core.Hubs
 {
     public class ChatHub : Hub
     {
-        private static readonly object s_lock = new();
-        private const int MaxMessages = 1000;
-        private static readonly List<ChatMessage> s_messages = new();
-        
         private readonly FirebaseMessagingService _firebaseMessaging;
         private readonly DeviceTokenStore _deviceTokenStore;
+        private readonly MessageStore _messageStore;
         private readonly ILogger<ChatHub> _logger;
 
         public ChatHub(
             FirebaseMessagingService firebaseMessaging, 
             DeviceTokenStore deviceTokenStore,
+            MessageStore messageStore,
             ILogger<ChatHub> logger)
         {
             _firebaseMessaging = firebaseMessaging;
             _deviceTokenStore = deviceTokenStore;
+            _messageStore = messageStore;
             _logger = logger;
         }
 
         public async Task SendMessage(ChatMessage message)
         {
-            lock (s_lock)
-            {
-                Console.WriteLine($"Received message from {message.UserFrom} to {message.UserTo}: {message.Id} {message.ContentType} {message.ContentName}");
-                s_messages.Add(message);
-                if (s_messages.Count > MaxMessages)
-                {
-                    s_messages.RemoveRange(0, s_messages.Count - MaxMessages);
-                }
-            }
+            Console.WriteLine($"Received message from {message.UserFrom} to {message.UserTo}: {message.Id} {message.ContentType} {message.ContentName}");
+            _messageStore.AddMessage(message);
 
             await Clients.All.SendAsync("ReceiveMessage", message);
 
@@ -44,15 +36,8 @@ namespace ChatServer.Core.Hubs
 
         public async Task<bool> SendMessage2(ChatMessage message)
         {
-            lock (s_lock)
-            {
-                Console.WriteLine($"Received message from {message.UserFrom} to {message.UserTo}: {message.Id} {message.ContentType} {message.ContentName}");
-                s_messages.Add(message);
-                if (s_messages.Count > MaxMessages)
-                {
-                    s_messages.RemoveRange(0, s_messages.Count - MaxMessages);
-                }
-            }
+            Console.WriteLine($"Received message from {message.UserFrom} to {message.UserTo}: {message.Id} {message.ContentType} {message.ContentName}");
+            _messageStore.AddMessage(message);
 
             await Clients.All.SendAsync("ReceiveMessage", message);
             
@@ -96,32 +81,18 @@ namespace ChatServer.Core.Hubs
 
         public Task<IEnumerable<ChatMessage>> ListMessages(DateTime date, string user)
         {
-            ChatMessage[] snapshot;
-            lock (s_lock)
-            {
-                snapshot = s_messages
-                    .Where(m => m.Timestamp >= date)
-                    .ToArray();
-            }
-
-            return Task.FromResult<IEnumerable<ChatMessage>>(snapshot);
+            return Task.FromResult(_messageStore.ListMessages(date, user));
         }
 
         public Task<IEnumerable<ChatMessage>> ListMessagesAndroid(string date, string user)
         {
-            Console.WriteLine($"ListMessagesAndroid: {date} user {user}");
-            ChatMessage[] snapshot;
             DateTime dateTime = DateTime.Parse(date);
-            Console.WriteLine($"ListMessagesAndroid: {dateTime} user {user}");
-            lock (s_lock)
-            {
-                snapshot = s_messages
-                    .Where(m => m.Timestamp >= dateTime)
-                    .ToArray();
-            }
-            _deviceTokenStore.AssignUser(user, Context.ConnectionId);
-            Console.WriteLine($"ListMessagesAndroid: {date} user {user} returned {snapshot.Length} messages");
-            return Task.FromResult<IEnumerable<ChatMessage>>(snapshot);
+            return ListMessages(dateTime, user);
+        }
+
+        public Task<ChatMessagesChunk> ListMessagesNext(string lastId, string user)
+        {
+            return Task.FromResult(_messageStore.ListMessagesNext(lastId, user));
         }
 
         private async Task SendPushNotificationAsync(ChatMessage message)
