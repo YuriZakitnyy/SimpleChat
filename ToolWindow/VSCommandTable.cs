@@ -12,7 +12,7 @@ namespace ToolWindow
     /// </summary>
     internal sealed partial class PackageGuids
     {
-        public const string ToolWindowString = "0ad8bc0d-5177-48a6-a842-1122758690f6";
+        public const string ToolWindowString = "0ad8bc0d-5177-48a6-a842-1122758690f7";
         public static Guid ToolWindow = new Guid(ToolWindowString);
     }
     /// <summary>
@@ -20,6 +20,6 @@ namespace ToolWindow
     /// </summary>
     internal sealed partial class PackageIds
     {
-        public const int MyCommand = 0x0100;
+        public const int MyCommand = 0x0101;
     }
 }

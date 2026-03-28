@@ -10,7 +10,7 @@ namespace ChatClientCommon
         public static List<string> DefaultAddresses => new List<string>
         {
             "https://chatserver-1-0-0.onrender.com/chatHub",
-            "http://localhost:7777/chatHub",
+            "http://localhost:31777/chatHub",
         };
     }
 }

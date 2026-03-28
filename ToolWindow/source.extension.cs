@@ -7,7 +7,7 @@ namespace ToolWindow
 {
     internal sealed partial class Vsix
     {
-        public const string Id = "ToolWindow.31a000cc-8120-41fe-9067-2fb52d4b78d2";
+        public const string Id = "ToolWindow.31a000cc-8120-41fe-9067-2fb52d4b78d3";
         public const string Name = "ToolWindow";
         public const string Description = @"Empty VSIX Project.";
         public const string Language = "en-US";

@@ -360,3 +360,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+*.lock
+*.bin
+ChatClientAndroid/app/build/intermediates
+ChatClientAndroid/app/build/generated
+ChatClientAndroid/app/build/tmp

@@ -10,7 +10,7 @@
              xmlns:toolkit="clr-namespace:Community.VisualStudio.Toolkit;assembly=Community.VisualStudio.Toolkit"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
-             Name="MyToolWindow" MouseMove="MyToolWindow_MouseMove" KeyDown="MyToolWindow_KeyDown">
+             Name="MyToolWindow" MouseMove="MyToolWindow_MouseMove" KeyDown="MyToolWindow_KeyDown" GotFocus="MyToolWindow_GotFocus" LostFocus="MyToolWindow_LostFocus">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BTV"/>
         
@@ -46,6 +46,7 @@
                                 MouseAction="LeftClick" />
                         </Image.InputBindings>
                     </Image>
+                    <Image Source="{Binding Image}" Stretch="Uniform" MaxWidth="32" MaxHeight="32" Visibility="{Binding IsEmoji, Converter={StaticResource BTV}, FallbackValue=Visible}" />
                     <TextBlock Text="{Binding FileName}" Foreground="Blue" TextWrapping="Wrap" Visibility="{Binding IsFile, Converter={StaticResource BTV}, FallbackValue=Visible}">
                         <TextBlock.InputBindings>
                             <!-- Binds the LeftClick action to a command in the DataContext -->
@@ -84,16 +85,13 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        
-        <Expander Header="Connection Settings" IsExpanded="True" Margin="5,0,0,5">
-            <StackPanel Grid.Row="0" Orientation="Vertical" HorizontalAlignment="Left" Margin="0">
-                <ComboBox ItemsSource="{Binding Addresses}" SelectedItem="{Binding BackendUrl, Mode=TwoWay}"
-                  Width="240" HorizontalAlignment="Left" IsEditable="True" IsTextSearchEnabled="True"/>
-                <TextBox Text="{Binding UserName,Mode=TwoWay}" HorizontalAlignment="Left" Margin="0, 5" Width="240" VerticalContentAlignment="Center" />
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
-                    <Button DataContext="{Binding ConnectCommand}" Command="{Binding}" Content="{Binding Header}" Height="25" IsEnabled="{Binding Enabled}" Width="115" Margin="0,0,10,0" />
-                    <Button DataContext="{Binding DisconnectCommand}" Command="{Binding}" Content="{Binding Header}"  Height="25"  IsEnabled="{Binding Enabled}" Width="115"/>
-                </StackPanel>
+
+        <Expander Header="Storage" IsExpanded="True" Margin="5,0,0,5" Visibility="{Binding ShowText, Converter={StaticResource BTV}, FallbackValue=Visible}">
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0">
+                <TextBox Text="{Binding UserName,Mode=TwoWay}" HorizontalAlignment="Left" Width="20" VerticalContentAlignment="Center" />
+                <ComboBox ItemsSource="{Binding Addresses}" SelectedItem="{Binding BackendUrl, Mode=TwoWay}" Width="150" HorizontalAlignment="Left" IsEditable="True" IsTextSearchEnabled="True"/>
+                <Button DataContext="{Binding ConnectCommand}" Command="{Binding}" Content="+" Height="25" IsEnabled="{Binding Enabled}" Width="20" Margin="0,0,0,0" />
+                <Button DataContext="{Binding DisconnectCommand}" Command="{Binding}" Content="-" Height="25"  IsEnabled="{Binding Enabled}" Width="20"/>
             </StackPanel>
         </Expander>
 
@@ -189,8 +187,8 @@
                 </TextBox.InputBindings>
             </TextBox>
             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0">
-                <Button DataContext="{Binding SaveComments}" Command="{Binding}" Content="{Binding Header}" Height="25" IsEnabled="{Binding Enabled}" Width="115" Margin="5" />
-                <Button DataContext="{Binding LoadComments}" Command="{Binding}" Content="{Binding Header}" Height="25" IsEnabled="{Binding Enabled}" Width="115" Margin="5"/>
+                <Button DataContext="{Binding SaveComments}" Command="{Binding}" Content="{Binding Header}" Height="25" IsEnabled="{Binding Enabled}" Width="100" Margin="5" />
+                <Button DataContext="{Binding LoadComments}" Command="{Binding}" Content="{Binding Header}" Height="25" IsEnabled="{Binding Enabled}" Width="100" Margin="5"/>
             </StackPanel>
         </Grid>
     </Grid>

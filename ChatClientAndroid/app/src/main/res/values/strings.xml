@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SimpleChat</string>
+    <string name="zoomed_image">Zoomed image</string>
+    <string name="send_emoji">R</string>
+</resources>

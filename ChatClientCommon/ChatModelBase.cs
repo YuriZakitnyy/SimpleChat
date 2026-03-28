@@ -119,6 +119,7 @@ namespace ChatClientCommon
         {
             if (SendCommand.Enabled)
             {
+                SetCanSend(false);
                 try
                 {
                     foreach (var file in files)
@@ -142,20 +143,22 @@ namespace ChatClientCommon
                     Logger.Error(this, ex);
                     Error = ex.Message;
                 }
+                SetCanSend(true);
             }
         }
 
-        public async void SendImage(string encoded)
+        public async void SendImage(string encoded, bool emoji = false)
         {
             if (SendCommand.Enabled)
             {
+                SetCanSend(false);
                 try
                 {
                     if (encoded.Length < 3 * CommonConstants.MaxMessageBytes / 4)
                     {
                         await _hubClient.SendMessageAsync(new ChatMessage
                         {
-                            ContentType = ChatMessageContentType.Image,
+                            ContentType = emoji ? ChatMessageContentType.Emogi : ChatMessageContentType.Image,
                             Message = encoded,
                             Id = Guid.NewGuid().ToString(),
                             UserFrom = UserName,
@@ -167,6 +170,7 @@ namespace ChatClientCommon
                     Logger.Error(this, ex);
                     Error = ex.Message;
                 }
+                SetCanSend(true); ;
             }
         }
 
@@ -210,7 +214,7 @@ namespace ChatClientCommon
                     Connecting = true;
                     ConnectCommand.Enabled = false;
                     DisconnectCommand.Enabled = false;
-                    SendCommand.Enabled = false;
+                    SetCanSend(false);
                     StopPingTimer();
                 });
             };
@@ -224,7 +228,7 @@ namespace ChatClientCommon
                     Connecting = false;
                     ConnectCommand.Enabled = false;
                     DisconnectCommand.Enabled = true;
-                    SendCommand.Enabled = true;
+                    SetCanSend(true);
                     await LoadMessages(false);
                     StartPingTimer();
                 });
@@ -239,7 +243,7 @@ namespace ChatClientCommon
                     Connecting = false;
                     ConnectCommand.Enabled = true;
                     DisconnectCommand.Enabled = false;
-                    SendCommand.Enabled = false;
+                    SetCanSend(false);
                     StopPingTimer();
                 });
             };
@@ -249,7 +253,7 @@ namespace ChatClientCommon
                 await _hubClient.ConnectAsync(BackendUrl);
                 ConnectCommand.Enabled = false;
                 DisconnectCommand.Enabled = true;
-                SendCommand.Enabled = true;
+                SetCanSend(true);
 
                 await LoadMessages(true);
                 StartPingTimer();
@@ -278,13 +282,14 @@ namespace ChatClientCommon
             Connecting = false;
             ConnectCommand.Enabled = true;
             DisconnectCommand.Enabled = false;
-            SendCommand.Enabled = true;
+            SetCanSend(false);
         }
 
         private async void SendAsync()
         {
             if (SendCommand.Enabled)
             {
+                SetCanSend(false);
                 try
                 {
                     await _hubClient.SendMessageAsync(new ChatMessage
@@ -305,6 +310,7 @@ namespace ChatClientCommon
                     Logger.Error(this, ex);
                     Error = ex.Message;
                 }
+                SetCanSend(true);
             }
         }
 
@@ -378,5 +384,10 @@ namespace ChatClientCommon
         }
 
         public abstract void RunOnMainThread(Action act);
+
+        protected virtual void SetCanSend(bool canSend)
+        {
+            SendCommand.Enabled = canSend && _hubClient.IsConnected;
+        }
     }
 }

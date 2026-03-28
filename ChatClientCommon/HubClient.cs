@@ -25,7 +25,6 @@ namespace ChatClientCommon
         {
             _connection = new HubConnectionBuilder()
                 .WithUrl(hubUrl)
-                
                 .WithUrl(hubUrl, options =>
                 {
                     options.TransportMaxBufferSize = CommonConstants.MaxMessageBytes;
