@@ -1,4 +1,5 @@
 using ChatServer.Core.Hubs;
+using ChatServer.Services;
 
 try
 {
@@ -37,6 +38,11 @@ try
     {
         options.MaximumReceiveMessageSize = MaxMessageBytes;
     });
+    builder.Services.AddSingleton<FirebaseMessagingService>();
+    builder.Services.AddSingleton<DeviceTokenStore>();
+
+    // Add background service for cleanup
+    //builder.Services.AddHostedService<DeviceCleanupService>();
 
     Console.WriteLine("Build");
     var app = builder.Build();

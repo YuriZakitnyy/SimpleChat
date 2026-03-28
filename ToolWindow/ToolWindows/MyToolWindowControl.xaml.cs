@@ -12,29 +12,23 @@ namespace ToolWindow
         private TooChatModel _model;
         private DispatcherTimer _timer;
         private DateTime _lastAction = DateTime.UtcNow;
-
+        public event Action<bool> UnreadChanged;
         public MyToolWindowControl(Version vsVersion)
         {
-            InitializeComponent();
-            Loaded += MyToolWindowControl_Loaded;
+            Logger.Messg(this, "Creating");
+            try
+            {
+                InitializeComponent();
+                Loaded += MyToolWindowControl_Loaded;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(this, ex);
+            }
         }
 
         private void MyToolWindowControl_Loaded(object sender, RoutedEventArgs e)
         {
-            if (_timer == null)
-            {
-                _timer = new DispatcherTimer();
-                _timer.Interval = TimeSpan.FromSeconds(2);
-                _timer.Tick += (s, e) =>
-                {
-                    if ((_model.DisplayMode != DisplayMode.Comments) && ((DateTime.UtcNow - _lastAction).TotalSeconds >= 15))
-                    {
-                        Logger.Messg(this, "Self hide");
-                        _model.DisplayMode = DisplayMode.Comments;
-                    }
-                };
-                _timer.Start();
-            }
             try
             {
                 if (_model == null)
@@ -51,6 +45,17 @@ namespace ToolWindow
                     };
                     _model.MessageArrived += () =>
                     {
+                        _model.RunOnMainThread(() =>
+                        {
+                            _model.Unread = true;
+                        });
+                    };
+                    _model.PropertyChanged += (s, args) =>
+                    {
+                        if (args.PropertyName == nameof(_model.Unread))
+                        {
+                            UnreadChanged?.Invoke(_model.Unread);
+                        }
                     };
                     DataContext = _model;
                 }
@@ -62,6 +67,27 @@ namespace ToolWindow
             catch (Exception ex)
             {
                 Logger.Error(this, ex);
+            }
+            if (_timer == null)
+            {
+                try
+                {
+                    _timer = new DispatcherTimer();
+                    _timer.Interval = TimeSpan.FromSeconds(2);
+                    _timer.Tick += (s, e) =>
+                    {
+                        if ((_model.DisplayMode != DisplayMode.Comments) && ((DateTime.UtcNow - _lastAction).TotalSeconds >= 15))
+                        {
+                            Logger.Messg(this, "Self hide");
+                            _model.DisplayMode = DisplayMode.Comments;
+                        }
+                    };
+                    _timer.Start();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(this, ex);
+                }
             }
         }
 
@@ -93,6 +119,15 @@ namespace ToolWindow
                         e.Handled = true;
                         _model.RunOnMainThread(() => _model.SendFiles(files));
                     }
+                }
+                if (Clipboard.ContainsText())
+                {
+                    var textBox = sender as TextBox;
+                    string pastedText = Clipboard.GetText();
+                    var oldStart = textBox.SelectionStart;
+                    textBox.SelectedText = pastedText;
+                    textBox.SelectionStart = oldStart + pastedText.Length;
+                    textBox.SelectionLength = 0;
                 }
             }
             catch (Exception ex)
@@ -143,6 +178,14 @@ namespace ToolWindow
         private void MyToolWindow_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             _lastAction = DateTime.UtcNow;
+        }
+
+        private void MyToolWindow_GotFocus(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void MyToolWindow_LostFocus(object sender, RoutedEventArgs e)
+        {
         }
     }
 }

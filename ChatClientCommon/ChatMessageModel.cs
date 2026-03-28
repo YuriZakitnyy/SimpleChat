@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 using CharCommon;
 using ChatClientCommon.UI;
@@ -16,6 +17,10 @@ namespace ChatClientCommon
         private BitmapImage _image;
         private bool _isSent;
         private bool _isReceived;
+        private bool _isLink;
+        private static readonly Regex UrlRegex = new Regex(
+            @"(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public ChatMessage Message => _message;
 
@@ -28,7 +33,13 @@ namespace ChatClientCommon
         public string MessageText
         {
             get { return _messageText; }
-            set { SetField(ref _messageText, value, nameof(MessageText)); }
+            set
+            {
+                if (SetField(ref _messageText, value, nameof(MessageText)))
+                {
+                    CallPropertyChanged(nameof(IsLink));
+                }
+            }
         }
 
         public DateTime Time
@@ -53,7 +64,15 @@ namespace ChatClientCommon
         {
             get
             {
-                return Image != null;
+                return Message.ContentType == ChatMessageContentType.Image;
+            }
+        }
+
+        public bool IsEmoji
+        {
+            get
+            {
+                return Message.ContentType == ChatMessageContentType.Emogi;
             }
         }
 
@@ -61,7 +80,7 @@ namespace ChatClientCommon
         {
             get
             {
-                return Message.ContentType == ChatMessageContentType.Text;
+                return Message.ContentType == ChatMessageContentType.Text && !IsLink;
             }
         }
 
@@ -70,6 +89,14 @@ namespace ChatClientCommon
             get
             {
                 return Message.ContentType == ChatMessageContentType.File;
+            }
+        }
+
+        public bool IsLink
+        {
+            get
+            {
+                return _isLink;
             }
         }
 
@@ -107,17 +134,20 @@ namespace ChatClientCommon
         private void Load(ChatMessage message)
         {
             UserName = message.UserFrom;
-            Time = message.Timestamp;
+            Time = message.Timestamp.ToLocalTime();
             if (message.ContentType == ChatMessageContentType.Text)
             {
                 MessageText = message.Message;
+                _isLink = !string.IsNullOrEmpty(MessageText) && UrlRegex.IsMatch(MessageText);
             }
-            if (message.ContentType == ChatMessageContentType.Image)
+
+            if (message.ContentType == ChatMessageContentType.Image ||
+                message.ContentType == ChatMessageContentType.Emogi)
             {
                 try
                 {
                     var bytes = ByteStringConverter.FromZ85String(message.Message);
-                    using (var stream = new System.IO.MemoryStream(bytes))
+                    using (var stream = new MemoryStream(bytes))
                     {
                         var image = new BitmapImage();
                         image.BeginInit();
@@ -139,6 +169,18 @@ namespace ChatClientCommon
         {
             try
             {
+                // If it's a link, open it in the browser
+                if (IsLink)
+                {
+                    var match = UrlRegex.Match(MessageText);
+                    if (match.Success)
+                    {
+                        Process.Start(new ProcessStartInfo(match.Value) { UseShellExecute = true });
+                        return;
+                    }
+                }
+
+                // Otherwise, save the file/image
                 var path = CommonConstants.OutputDirectory;
                 if (!Directory.Exists(path))
                 {

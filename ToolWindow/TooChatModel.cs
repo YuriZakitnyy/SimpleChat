@@ -18,6 +18,8 @@ namespace ToolWindow
     public class TooChatModel : ChatModelBase
     {
         private string _comments;
+        private bool _unread;
+
         private DisplayMode _displayMode = DisplayMode.Comments;
 
         public DisplayMode DisplayMode
@@ -42,6 +44,12 @@ namespace ToolWindow
         public RelayCommand ShowMessagesCommand { get; set; }
 
         public TextBox MessagesTextBox { get; set; }
+
+        public bool Unread
+        {
+            get => _unread;
+            set { SetField(ref _unread, value, nameof(Unread)); }
+        }
 
         public TooChatModel()
         {
@@ -113,6 +121,9 @@ namespace ToolWindow
                     break;
                 case ChatMessageContentType.Image:
                     MessagesTextBox.AppendText("\r\nimg");
+                    break;
+                case ChatMessageContentType.Emogi:
+                    MessagesTextBox.AppendText("\r\nemoj");
                     break;
                 case ChatMessageContentType.Text:
                     MessagesTextBox.AppendText("\r\n" + message.Message);

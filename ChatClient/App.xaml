@@ -1,10 +1,14 @@
 ﻿<Application x:Class="ChatClient.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:ChatClient"
+             xmlns:common="clr-namespace:ChatClientCommon;assembly=ChatClientCommon"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BTV"/>
-        
+        <common:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <common:BooleanAndToVisibilityConverter x:Key="BooleanAndToVisibilityConverter"/>
+
         <Style x:Key="ChatItemContainerStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="2"/>
             <Setter Property="Margin" Value="4"/>
@@ -18,6 +22,54 @@
             </Style.Triggers>
         </Style>
         
+        <!-- Style for clickable, selectable link text -->
+        <Style x:Key="LinkTextBoxStyle" TargetType="TextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#0066CC"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+            <Setter Property="TextDecorations" Value="Underline"/>
+            <Setter Property="IsReadOnlyCaretVisible" Value="True"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#0052A3"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="Cursor" Value="IBeam"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style for Hyperlink (defined at application level) -->
+        <Style x:Key="HyperlinkStyle" TargetType="Hyperlink">
+            <Setter Property="Foreground" Value="#0066CC"/>
+            <Setter Property="TextDecorations" Value="Underline"/>
+            <EventSetter Event="RequestNavigate" Handler="Hyperlink_RequestNavigate"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#0052A3"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Style for RichTextBox with link support -->
+        <Style x:Key="LinkRichTextBoxStyle" TargetType="RichTextBox">
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="IsDocumentEnabled" Value="True"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+        
         <DataTemplate x:Key="ChatMessageDataTemplate">
             <Border x:Name="Bubble"
                     Padding="8"
@@ -27,24 +79,68 @@
                     SnapsToDevicePixels="True">
                 <StackPanel>
                     <TextBlock Text="{Binding UserName}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,4"/>
-                    <TextBox BorderThickness="0" Background="Transparent" Text="{Binding MessageText}" IsReadOnly="True" TextWrapping="Wrap" Visibility="{Binding IsText, Converter={StaticResource BTV}, FallbackValue=Visible}" />
-                    <Image Source="{Binding Image}" Stretch="Uniform" MaxWidth="400" MaxHeight="300" Visibility="{Binding IsImage, Converter={StaticResource BTV}, FallbackValue=Visible}">
+                    
+                    <!-- Regular Text (not a link) -->
+                    <TextBox BorderThickness="0" 
+                             Background="Transparent" 
+                             Text="{Binding MessageText}" 
+                             IsReadOnly="True" 
+                             TextWrapping="Wrap">
+                        <TextBox.Visibility>
+                            <MultiBinding Converter="{StaticResource BooleanAndToVisibilityConverter}">
+                                <Binding Path="IsText"/>
+                                <Binding Path="IsLink" Converter="{StaticResource InverseBooleanConverter}"/>
+                            </MultiBinding>
+                        </TextBox.Visibility>
+                    </TextBox>
+                    
+                    <!-- Image -->
+                    <Image Source="{Binding Image}" 
+                           Stretch="Uniform" 
+                           MaxWidth="400" 
+                           MaxHeight="300" 
+                           Visibility="{Binding IsImage, Converter={StaticResource BTV}, FallbackValue=Visible}">
                         <Image.InputBindings>
-                            <!-- Binds the LeftClick action to a command in the DataContext -->
-                            <MouseBinding 
-                                Command="{Binding ClickCommand}" 
-                                MouseAction="LeftClick" />
+                            <MouseBinding Command="{Binding ClickCommand}" MouseAction="LeftClick" />
                         </Image.InputBindings>
                     </Image>
-                    <TextBlock Text="{Binding FileName}" Foreground="Blue" TextWrapping="Wrap" Visibility="{Binding IsFile, Converter={StaticResource BTV}, FallbackValue=Visible}">
+                    
+                    <!-- Emoji -->
+                    <Image Source="{Binding Image}" 
+                           Stretch="Uniform" 
+                           MaxWidth="32" 
+                           MaxHeight="32" 
+                           Visibility="{Binding IsEmoji, Converter={StaticResource BTV}, FallbackValue=Visible}" />
+                    
+                    <!-- File -->
+                    <TextBlock Text="{Binding FileName}" 
+                               Foreground="Blue" 
+                               TextWrapping="Wrap" 
+                               Visibility="{Binding IsFile, Converter={StaticResource BTV}, FallbackValue=Visible}">
                         <TextBlock.InputBindings>
-                            <!-- Binds the LeftClick action to a command in the DataContext -->
-                            <MouseBinding 
-                                Command="{Binding ClickCommand}" 
-                                MouseAction="LeftClick" />
+                            <MouseBinding Command="{Binding ClickCommand}" MouseAction="LeftClick" />
                         </TextBlock.InputBindings>
                     </TextBlock>
-                    <TextBlock Text="{Binding Time, StringFormat='{}{0:HH:mm}'}"
+
+                    <!-- Link - Using RichTextBox with formatted hyperlinks -->
+                    <RichTextBox Visibility="{Binding IsLink, Converter={StaticResource BTV}}"
+                                 Style="{StaticResource LinkRichTextBoxStyle}"
+                                 Margin="0,4,0,0"
+                                 common:RichTextBoxHelper.DocumentXaml="{Binding MessageText}"
+                                 ToolTip="Click to open link">
+                        <RichTextBox.Resources>
+                            <Style TargetType="Hyperlink" BasedOn="{StaticResource HyperlinkStyle}"/>
+                        </RichTextBox.Resources>
+                        <RichTextBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Copy" Command="ApplicationCommands.Copy"/>
+                                <MenuItem Header="Select All" Command="ApplicationCommands.SelectAll"/>
+                            </ContextMenu>
+                        </RichTextBox.ContextMenu>
+                    </RichTextBox>
+                    
+                    <!-- Timestamp -->
+                    <TextBlock Text="{Binding Time, StringFormat='{}{0:HH:mm MM:dd}'}"
                                FontSize="10"
                                Foreground="Gray"
                                HorizontalAlignment="Right"

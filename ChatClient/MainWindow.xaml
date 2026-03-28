@@ -28,13 +28,14 @@
                 VirtualizingStackPanel.VirtualizationMode="Recycling"
                 VirtualizingStackPanel.ScrollUnit="Pixel"/>
 
-        <Grid Grid.Row="2" Margin="0,0,0,8" Height="60">
+        <Grid Grid.Row="2" Margin="0,0,0,0" Height="60">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox Text="{Binding MessageText,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,0,8,0"
+                 Margin="0,0,0,0"
                  VerticalContentAlignment="Top"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
@@ -43,7 +44,6 @@
                  AllowDrop="True" 
                  PreviewDragOver="FilePathTextBox_PreviewDragOver" 
                  Drop="FilePathTextBox_Drop" >
-                <!-- KeyBinding for Ctrl+Enter. Bind via the UserControl's DataContext so the command resolves correctly. -->
                 <TextBox.CommandBindings>
                     <CommandBinding Command="ApplicationCommands.Paste"
                                     Executed="MessageTextBox_PasteExecuted"
@@ -53,7 +53,81 @@
                     <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding SendCommand}"/>
                 </TextBox.InputBindings>
             </TextBox>
-            <Button Grid.Column="1" DataContext="{Binding SendCommand}" Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Width="80" />
+            
+            <!-- Emoji Picker ComboBox -->
+            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="5,0,0,0">
+                <ComboBox
+                          ItemsSource="{Binding Emojis}"
+                          SelectedItem="{Binding SelectedEmoji, Mode=TwoWay}"
+                          Width="50"
+                          Height="30"
+                          Margin="0,0,0,0"
+                          ToolTip="Select emoji to send">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{Binding Image}" Width="32" Height="32" Margin="2"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                    <ComboBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ComboBox.ItemsPanel>
+                    <!-- Button template to show emoji icon -->
+                    <ComboBox.Template>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton x:Name="ToggleButton"
+                                            Grid.Column="2"
+                                            Focusable="false"
+                                            IsChecked="{Binding Path=IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                            ClickMode="Press">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="{TemplateBinding Background}"
+                                                  BorderBrush="{TemplateBinding BorderBrush}"
+                                                  BorderThickness="1"
+                                                  CornerRadius="2">
+                                                <TextBlock Text="{Binding Path=SelectedEmoji.Emoji}" 
+                                                         FontSize="20" 
+                                                         HorizontalAlignment="Center" 
+                                                         VerticalAlignment="Center"
+                                                         Margin="5,2"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Popup x:Name="Popup"
+                                     Placement="Top"
+                                     IsOpen="{TemplateBinding IsDropDownOpen}"
+                                     AllowsTransparency="True"
+                                     Focusable="False"
+                                     PopupAnimation="Slide">
+                                    <Grid x:Name="DropDown"
+                                        SnapsToDevicePixels="True"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="400"
+                                        Width="350">
+                                        <Border x:Name="DropDownBorder"
+                                              Background="White"
+                                              BorderThickness="1"
+                                              BorderBrush="Gray">
+                                            <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
+                                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                            </ScrollViewer>
+                                        </Border>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+                        </ControlTemplate>
+                    </ComboBox.Template>
+                </ComboBox>
+                <Button DataContext="{Binding SendEmojiCommand}" Margin="0,5,0,0"  Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Height="25"/>
+            </StackPanel>
+            <Button Grid.Column="1" DataContext="{Binding SendCommand}" Command="{Binding}" Content="{Binding Header}" IsEnabled="{Binding Enabled}" Width="50" />
         </Grid>
     </Grid>
 </Window>

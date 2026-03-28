@@ -180,10 +180,12 @@
     <Compile Include="ChatSettings.cs" />
     <Compile Include="ClipboardImageConverter.cs" />
     <Compile Include="CommonConstants.cs" />
+    <Compile Include="Converters.cs" />
     <Compile Include="DataStore.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HubClient.cs" />
+    <Compile Include="RichTextBoxHelper.cs" />
     <Compile Include="UI\BindingItem.cs" />
     <Compile Include="UI\ListItem.cs" />
     <Compile Include="UI\RelayCommand.cs" />
