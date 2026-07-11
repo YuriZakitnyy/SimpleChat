@@ -120,7 +120,36 @@ namespace ChatClientCommon
             set { SetField(ref _isReceived, value, nameof(IsReceived)); }
         }
 
+        public string MessageInfo
+        {
+            get
+            {
+                var info = $"{UserName} - {Time:HH:mm}";
+                if (IsFile)
+                {
+                    info += $" - {FileName}";
+                }
+                if (IsImage)
+                {
+                    info += " - Image";
+                }
+                if (IsEmoji)
+                {
+                    info += " - Emoji";
+                }
+                if (IsLink || IsText)
+                {
+                    info += _messageText.Substring(0, Math.Min(20, _messageText.Length));
+                }
+                return info;
+            }
+        }
+
         public RelayCommand ClickCommand { get; set; }
+        public RelayCommand ReplyCommand { get; set; }
+        public RelayCommand CopyTextCommand { get; set; }
+
+        public Action<ChatMessageModel> OnReply { get; set; }
         
         public ChatMessageModel(ChatMessage message, bool isReceived)
         {
@@ -128,6 +157,8 @@ namespace ChatClientCommon
             IsReceived = isReceived;
             IsSent = !isReceived;
             ClickCommand = new RelayCommand((s) => Click(s), "", true);
+            ReplyCommand = new RelayCommand((s) => Reply(s), "Reply", true);
+            CopyTextCommand = new RelayCommand((s) => CopyText(s), "Copy Text", true);
             Load(message);
         }
 
@@ -194,6 +225,33 @@ namespace ChatClientCommon
                 var bytes = ByteStringConverter.FromZ85String(_message.Message);
                 File.WriteAllBytes(fileName, bytes);
                 Process.Start("explorer.exe", $"/select,\"{fileName}\"");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(this, ex);
+            }
+        }
+
+        private void Reply(object s)
+        {
+            try
+            {
+                OnReply?.Invoke(this);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(this, ex);
+            }
+        }
+
+        private void CopyText(object s)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(MessageText))
+                {
+                    System.Windows.Clipboard.SetText(MessageText);
+                }
             }
             catch (Exception ex)
             {

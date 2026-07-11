@@ -23,6 +23,7 @@ namespace ChatClientCommon
         private ChatMessageContentType _messageContentType;
         private string _messageId;
         private Timer _pingTimer;
+        private ChatMessageModel _replyToMessage;
 
         protected DataStore _store;
 
@@ -86,9 +87,18 @@ namespace ChatClientCommon
             set { SetField(ref _messageContentType, value, nameof(MessageContentType)); }
         }
 
+        public ChatMessageModel ReplyToMessage
+        {
+            get { return _replyToMessage; }
+            set { SetField(ref _replyToMessage, value, nameof(ReplyToMessage), nameof(IsReplying)); }
+        }
+
+        public bool IsReplying => ReplyToMessage != null;
+
         public RelayCommand ConnectCommand { get; set; }
         public RelayCommand DisconnectCommand { get; set; }
         public RelayCommand SendCommand { get; set; }
+        public RelayCommand CancelReplyCommand { get; set; }
         public ChatSettings Settings { get; set; }
 
         public ChatModelBase()
@@ -104,6 +114,7 @@ namespace ChatClientCommon
                 ConnectCommand = new RelayCommand(s => ConnectAsync(), "Connect", true);
                 DisconnectCommand = new RelayCommand(s => DisconnectAsync(), "Disconnect", true);
                 SendCommand = new RelayCommand(s => SendAsync(), "Send", true);
+                CancelReplyCommand = new RelayCommand(s => CancelReply(), "Cancel", true);
                 ConnectCommand.Enabled = true;
                 DisconnectCommand.Enabled = false;
                 SendCommand.Enabled = false;
@@ -172,6 +183,11 @@ namespace ChatClientCommon
                 }
                 SetCanSend(true); ;
             }
+        }
+
+        protected virtual void SetupMessageReply(ChatMessageModel messageModel)
+        {
+            messageModel.OnReply = HandleReply;
         }
 
         private async void ConnectAsync()
@@ -378,9 +394,22 @@ namespace ChatClientCommon
             }
         }
 
+        private void HandleReply(ChatMessageModel message)
+        {
+            ReplyToMessage = message;
+            Logger.Messg(this, $"Replying to message {ReplyToMessage.Message.Id}");
+        }
+
+        private void CancelReply()
+        {
+            ReplyToMessage = null;
+        }
+
         protected virtual ChatMessageModel CreateMessageModel(ChatMessage message)
         {
-            return new ChatMessageModel(message, message.UserFrom != UserName);
+            var result = new ChatMessageModel(message, message.UserFrom != UserName);
+            SetupMessageReply(result);
+            return result;
         }
 
         public abstract void RunOnMainThread(Action act);

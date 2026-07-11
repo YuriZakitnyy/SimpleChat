@@ -86,12 +86,14 @@ namespace ChatServer.Core.Hubs
 
         public Task<IEnumerable<ChatMessage>> ListMessagesAndroid(string date, string user)
         {
+            _deviceTokenStore.AssignUser(user, Context.ConnectionId);
             DateTime dateTime = DateTime.Parse(date);
             return ListMessages(dateTime, user);
         }
 
         public Task<ChatMessagesChunk> ListMessagesNext(string lastId, string user)
         {
+            _deviceTokenStore.AssignUser(user, Context.ConnectionId);
             return Task.FromResult(_messageStore.ListMessagesNext(lastId, user));
         }
 

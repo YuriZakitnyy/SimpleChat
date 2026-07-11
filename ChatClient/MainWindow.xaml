@@ -7,6 +7,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Expander Header="Connection Settings" IsExpanded="True" Margin="0,0,0,8">
             <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Left" Margin="5">
@@ -28,7 +29,32 @@
                 VirtualizingStackPanel.VirtualizationMode="Recycling"
                 VirtualizingStackPanel.ScrollUnit="Pixel"/>
 
-        <Grid Grid.Row="2" Margin="0,0,0,0" Height="60">
+        <Border Background="#FFF9E6" Grid.Row="2" Height="40"
+        Padding="8"
+        Margin="0,0,0,4"
+        CornerRadius="4"
+        Visibility="{Binding IsReplying, Converter={StaticResource BTV}}">
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Reply:" FontSize="10" Foreground="Gray"/>
+                    <TextBlock Text="{Binding Path=ReplyToMessage.MessageInfo}" FontWeight="Bold" FontSize="12"/>
+                </StackPanel>
+                <Button Grid.Column="1" 
+                Content="✕" 
+                Command="{Binding CancelReplyCommand}"
+                Background="Transparent"
+                BorderThickness="0"
+                FontSize="16"
+                Padding="8,0"
+                Cursor="Hand"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,0,0,0" Height="60">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
